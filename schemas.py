@@ -31,9 +31,14 @@ class MessageSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class Bot(BaseModel): 
+    id: str
+    name: str
+
 class ConversationSchema(BaseModel):
     id: str
     user_id: str
+    bot: Bot
     created_at: datetime.datetime
     messages: List[MessageSchema] = []
 
