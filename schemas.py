@@ -4,6 +4,7 @@ import datetime
 
 class ConversationCreateRequest(BaseModel):
     user_id: str
+    bot_id: str
     initial_message: Optional[str] = None
 
 class ConversationCreateResponse(BaseModel):

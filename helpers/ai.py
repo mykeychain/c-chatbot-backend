@@ -1,12 +1,27 @@
-from models import Conversation, Message, User
+from models import Conversation, Message, User, Sender, Bot
 from schemas import ConversationCreateRequest, MessageRequest, MessageResponse
 import uuid
 import datetime
 from pypinyin import lazy_pinyin, pinyin
 from gemini import generate_response
 
-def get_ai_response(recent_msgs: list[dict], user_content: str) -> str:
-    prompt = "你是一個中文老師，使用繁體中文回答。Limit your response to about 140 characters.\n"
+BASIC_PROMPT = '''You are a conversational Mandarin-speaking chatbot.
+    Respond only in Traditional Chinese characters,
+    respond like you are texting a friend or acquaintance with a focus on sounding natural,
+    use emojis very sparingly,
+    and limit your response to about 30 characters or less.\n
+'''
+
+DIFFICULTY_PROMPTS = {
+    'easy': "The user is at an easy difficulty so respond with the vocabulary that a 5th grader may understand.\n",
+    'medium': "The user is at a medium difficulty so respond with the vocabulary that a 9th grader may understand.\n",
+    'hard': "The user is at a hard difficulty so respond with the vocabulary that an undergraduate may understand.\n",
+    'native': "The user is at a native difficulty so respond with the vocabulary that a native speaker may understand.\n",
+}
+
+
+def get_ai_response(recent_msgs: list[dict], bot: Bot, user: User, user_content: str) -> str:
+    prompt = BASIC_PROMPT + bot.character_notes + DIFFICULTY_PROMPTS[user.difficulty]
     for msg in recent_msgs:
         role = "User" if msg["sender"] == "user" else "AI"
         prompt += f"{role}: {msg['content']}\n"
@@ -24,20 +39,18 @@ def create_conversation(db, request: ConversationCreateRequest):
     db.add(new_conv)
     db.commit()
 
-    # Handle optional initial user message
     if request.initial_message:
         user_msg = Message(
             id=str(uuid.uuid4()),
             conversation_id=new_conv.id,
-            sender='user',
+            sender=Sender.USER,
             content=request.initial_message,
             pinyin=lazy_pinyin(request.initial_message),
             created_at=datetime.datetime.utcnow()
         )
         db.add(user_msg)
 
-        # Initial AI response
-        ai_content = generate_response(f"你是一個中文老師，使用繁體中文回答。\nUser: {request.initial_message}\nAI:")
+        ai_content = generate_response(f"{BASIC_PROMPT}User: {request.initial_message}\nAI:")
         ai_msg = Message(
             id=str(uuid.uuid4()),
             conversation_id=new_conv.id,
@@ -60,33 +73,30 @@ def process_message(db, request: MessageRequest):
     recent_msgs = db.query(Message).filter_by(conversation_id=conv.id)\
                     .order_by(Message.created_at.asc()).limit(20).all()
     
-    prompt = "你是一個中文老師，使用繁體中文回答。\n"
+    prompt = BASIC_PROMPT
     for msg in recent_msgs:
-        role = "User" if msg.sender == "user" else "AI"
+        role = "user" if msg.sender == Sender.USER else "ai"
         prompt += f"{role}: {msg.content}\n"
 
     prompt += f"User: {request.content}\nAI:"
 
-    # Generate AI response using Gemini
     ai_response_text = generate_response(prompt)
 
-    # Create and store the user's message
     user_msg = Message(
         id=str(uuid.uuid4()),
         conversation_id=conv.id,
-        sender='user',
+        sender=Sender.USER,
         content=request.content,
         pinyin=pinyin(request.content),
         created_at=datetime.datetime.utcnow()
     )
 
-    # Create and store AI's response message
     pinyin_conversion = pinyin(ai_response_text, strict=False)
     pinyin_list = [item for clause in pinyin_conversion for item in clause]
     ai_msg = Message(
         id=str(uuid.uuid4()),
         conversation_id=conv.id,
-        sender='ai',
+        sender=Sender.AI,
         content=ai_response_text,
         pinyin=pinyin_list,
         created_at=datetime.datetime.utcnow()

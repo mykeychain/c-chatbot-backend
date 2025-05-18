@@ -26,7 +26,7 @@ app = FastAPI()
 
 @app.post("/api/conversations", response_model=ConversationCreateResponse)
 def api_create_conversation(request: ConversationCreateRequest, db: Session = Depends(get_db)):
-    conv = create_conversation(db, request.user_id)
+    conv = create_conversation(db, request.user_id, request.bot_id)
 
     if request.initial_message:
         create_message(
@@ -37,7 +37,7 @@ def api_create_conversation(request: ConversationCreateRequest, db: Session = De
             pinyin=get_pinyin_list(request.initial_message)
         )
 
-        ai_content = get_ai_response([], request.initial_message)
+        ai_content = get_ai_response([], conv.bot, request.initial_message)
         create_message(
             db=db,
             conversation_id=conv.id,
@@ -82,7 +82,7 @@ def api_send_message(request: MessageRequest, db: Session = Depends(get_db)):
         pinyin=get_pinyin_list(request.content)
     )
 
-    ai_content = get_ai_response(recent_msgs, request.content)
+    ai_content = get_ai_response(recent_msgs, conv.bot, conv.user, request.content)
 
     ai_msg = create_message(
         db=db,

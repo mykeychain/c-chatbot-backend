@@ -2,10 +2,11 @@ from models import Conversation, Message
 import uuid
 import datetime
 
-def create_conversation(db, user_id: str):
+def create_conversation(db, user_id: str, bot_id: str):
     conv = Conversation(
         id=str(uuid.uuid4()),
         user_id=user_id,
+        bot_id=bot_id,
         created_at=datetime.datetime.utcnow()
     )
     db.add(conv)
