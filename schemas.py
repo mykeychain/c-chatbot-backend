@@ -40,7 +40,6 @@ class ConversationSchema(BaseModel):
     user_id: str
     bot: Bot
     created_at: datetime.datetime
-    messages: List[MessageSchema] = []
 
     class Config:
         orm_mode = True

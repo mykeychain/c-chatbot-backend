@@ -9,6 +9,7 @@ from schemas import (
     ConversationSchema,
     MessageRequest,
     MessageResponse,
+    MessageSchema,
 )
 from crud import (
     create_conversation,
@@ -16,6 +17,7 @@ from crud import (
     delete_conversation,
     get_conversation,
     list_user_conversations,
+    get_conversation_messages,
 )
 from dependencies import get_db
 from helpers.ai import get_ai_response
@@ -75,6 +77,14 @@ def api_delete_conversation(conversation_id: str, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Conversation not found")
     return ConversationDeleteResponse(success=True)
 
+@app.get("/api/conversations/{conversation_id}/messages", response_model=List[MessageSchema])
+def api_get_conversation_messages(conversation_id: str, db: Session = Depends(get_db)):
+    msgs = get_conversation_messages(db, conversation_id)
+    if not msgs:
+        # TODO: fix this error message
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return msgs
+
 @app.post("/api/message", response_model=MessageResponse)
 def api_send_message(request: MessageRequest, db: Session = Depends(get_db)):
     conv = get_conversation(db, request.conversation_id)
@@ -101,4 +111,4 @@ def api_send_message(request: MessageRequest, db: Session = Depends(get_db)):
         pinyin=get_pinyin_list(ai_content)
     )
 
-    return MessageResponse(content=ai_content, pinyin=ai_msg.pinyin)
+    return MessageSchema(id=ai_msg.id, sender=ai_msg.sender, content=ai_msg.content, pinyin=ai_msg.pinyin, created_at=ai_msg.created_at)

@@ -42,3 +42,6 @@ def delete_conversation(db, conversation_id: str):
         db.commit()
         return True
     return False
+
+def get_conversation_messages(db, conversation_id: str):
+    return db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.created_at.asc()).all()
