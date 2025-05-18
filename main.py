@@ -1,6 +1,7 @@
-# main.py
+import os
 
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from schemas import (
     ConversationCreateRequest,
     ConversationCreateResponse,
@@ -23,6 +24,14 @@ from sqlalchemy.orm import Session
 from typing import List
 
 app = FastAPI()
+
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=os.environ.get('CORS_URLS'),
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"], 
+)
 
 @app.post("/api/conversations", response_model=ConversationCreateResponse)
 def api_create_conversation(request: ConversationCreateRequest, db: Session = Depends(get_db)):
