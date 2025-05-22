@@ -28,6 +28,7 @@ class Bot(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now(datetime.timezone.utc))
     name: Mapped[str] = mapped_column(String(30), nullable=False)
+    picture_url: Mapped[str] = mapped_column(String)
     character_notes: Mapped[str] = mapped_column(Text)
     conversations: Mapped[List['Conversation']] = relationship('Conversation', back_populates='bot')
 

@@ -40,7 +40,7 @@ class ConversationSchema(BaseModel):
     user_id: str
     bot: Bot
     created_at: datetime.datetime
-    last_message: MessageSchema
+    last_message: Optional[MessageSchema] = None
 
     class Config:
         orm_mode = True
