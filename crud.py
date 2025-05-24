@@ -1,6 +1,8 @@
-from models import Conversation, Message
+from models import Conversation, Message, Bot
 import uuid
 import datetime
+from sqlalchemy import not_
+from sqlalchemy.orm import Session
 
 def create_conversation(db, user_id: str, bot_id: str):
     conv = Conversation(
@@ -45,3 +47,9 @@ def delete_conversation(db, conversation_id: str):
 
 def get_conversation_messages(db, conversation_id: str):
     return db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.created_at.asc()).all()
+
+def get_available_bots(db: Session, user_id: str):
+    # Get all bots that don't have a conversation with this user
+    existing_bot_ids = db.query(Conversation.bot_id).filter(Conversation.user_id == user_id).subquery()
+    available_bots = db.query(Bot).filter(not_(Bot.id.in_(existing_bot_ids))).all()
+    return available_bots

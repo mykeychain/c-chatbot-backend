@@ -44,3 +44,11 @@ class ConversationSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+class BotSchema(BaseModel):
+    id: str
+    name: str
+    picture_url: Optional[str]
+
+    class Config:
+        orm_mode = True

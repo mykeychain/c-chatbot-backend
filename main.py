@@ -10,6 +10,7 @@ from schemas import (
     MessageRequest,
     MessageResponse,
     MessageSchema,
+    BotSchema,
 )
 from crud import (
     create_conversation,
@@ -18,6 +19,7 @@ from crud import (
     get_conversation,
     list_user_conversations,
     get_conversation_messages,
+    get_available_bots,
 )
 from dependencies import get_db
 from helpers.ai import get_ai_response
@@ -35,7 +37,7 @@ app.add_middleware(
   allow_headers=["*"], 
 )
 
-@app.post("/api/conversations", response_model=ConversationCreateResponse)
+@app.post("/api/conversations", response_model=ConversationSchema)
 def api_create_conversation(request: ConversationCreateRequest, db: Session = Depends(get_db)):
     conv = create_conversation(db, request.user_id, request.bot_id)
 
@@ -57,7 +59,7 @@ def api_create_conversation(request: ConversationCreateRequest, db: Session = De
             pinyin=get_pinyin_list(ai_content)
         )
 
-    return ConversationCreateResponse(conversation_id=conv.id)
+    return conv
 
 @app.get("/api/conversations/{conversation_id}", response_model=ConversationSchema)
 def api_get_conversation(conversation_id: str, db: Session = Depends(get_db)):
@@ -79,10 +81,11 @@ def api_delete_conversation(conversation_id: str, db: Session = Depends(get_db))
 
 @app.get("/api/conversations/{conversation_id}/messages", response_model=List[MessageSchema])
 def api_get_conversation_messages(conversation_id: str, db: Session = Depends(get_db)):
-    msgs = get_conversation_messages(db, conversation_id)
-    if not msgs:
-        # TODO: fix this error message
+    conv = get_conversation(db, conversation_id)
+    if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    msgs = get_conversation_messages(db, conversation_id)
     return msgs
 
 @app.post("/api/message", response_model=MessageResponse)
@@ -112,3 +115,7 @@ def api_send_message(request: MessageRequest, db: Session = Depends(get_db)):
     )
 
     return MessageSchema(id=ai_msg.id, sender=ai_msg.sender, content=ai_msg.content, pinyin=ai_msg.pinyin, created_at=ai_msg.created_at)
+
+@app.get("/api/users/{user_id}/available-bots", response_model=List[BotSchema])
+def api_get_available_bots(user_id: str, db: Session = Depends(get_db)):
+    return get_available_bots(db, user_id)
