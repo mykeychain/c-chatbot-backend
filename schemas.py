@@ -52,3 +52,14 @@ class BotSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+class TranslationRequest(BaseModel):
+    text: str
+
+    @property
+    def is_chinese(self) -> bool:
+        return any('\u4e00' <= char <= '\u9fff' for char in self.text)
+
+class TranslationResponse(BaseModel):
+    original_text: str
+    translated_text: str

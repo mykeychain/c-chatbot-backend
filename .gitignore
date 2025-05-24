@@ -1,4 +1,7 @@
 .env
+argos_data/
 venv/
+venv-3.11/
+venv-3.13/
 requirements.txt
 __pycache__

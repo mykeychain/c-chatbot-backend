@@ -1,5 +1,6 @@
 import os
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import (
@@ -11,6 +12,8 @@ from schemas import (
     MessageResponse,
     MessageSchema,
     BotSchema,
+    TranslationRequest,
+    TranslationResponse,
 )
 from crud import (
     create_conversation,
@@ -22,12 +25,19 @@ from crud import (
     get_available_bots,
 )
 from dependencies import get_db
+from helpers.translator import ensure_zh_en_installed
 from helpers.ai import get_ai_response
 from helpers.pinyin import get_pinyin_list
 from sqlalchemy.orm import Session
 from typing import List
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI): 
+    ensure_zh_en_installed()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
   CORSMiddleware,
@@ -119,3 +129,16 @@ def api_send_message(request: MessageRequest, db: Session = Depends(get_db)):
 @app.get("/api/users/{user_id}/available-bots", response_model=List[BotSchema])
 def api_get_available_bots(user_id: str, db: Session = Depends(get_db)):
     return get_available_bots(db, user_id)
+
+@app.post("/api/translate", response_model=TranslationResponse)
+def api_translate_chinese_to_english(request: TranslationRequest):
+    if not request.is_chinese:
+        raise HTTPException(status_code=400, detail="Text must contain Chinese characters")
+    
+    from helpers.translator import translate_chinese_to_english
+    translated = translate_chinese_to_english(request.text)
+    
+    return TranslationResponse(
+        original_text=request.text,
+        translated_text=translated
+    )
