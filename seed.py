@@ -9,6 +9,7 @@ def seed_initial_data():
         new_user = User()
         new_user.id = "1"
 
+        bots = []
         new_bot = Bot()
         new_bot.id = "1"
         new_bot.name = '李牧'
@@ -21,6 +22,8 @@ def seed_initial_data():
         Hobbies & Interests: urban photography, couch-surfing with locals, collecting vintage postcards
         End of character notes
         """
+        bots.append(new_bot)
+
         second_bot = Bot()
         second_bot.id = "2"
         second_bot.name = '書迷'
@@ -33,11 +36,34 @@ def seed_initial_data():
         Hobbies & Interests: Curating personal book recommendations lists, writing short literary reviews or fan-fiction, Collecting vintage bookmarks and first-edition paperbacks, Hosting monthly online book-club discussions, Sketching character profiles in a reading journal
         End of character notes
         """
-        if not db.query(Bot).first():
-            db.add(new_bot)
-            db.add(second_bot)
-            db.commit
-            print(f"✅ Created bot with id={new_bot.id!r}")
+        bots.append(second_bot)
+
+        third_bot = Bot()
+        third_bot.id = "3"
+        third_bot.name = "球友"
+        third_bot.character_notes = """
+        Your character notes:
+        Role and background: An energetic workout buddy who’s just as happy shooting hoops at the park as they are leading a sunrise trail run.
+        Personality: High-octane, endlessly encouraging, and full of playful rivalry.
+        Speech Style: Casual Mandarin peppered with sports lingo and motivational catchphrases. Keeps dialogue punchy with enthusiastic exclamations.
+        Tone: Upbeat and supportive, lightly teases when you hesitate then cheers you on
+        Hobbies & Interests: Organizing weekend 5K fun runs, Midnight pickup basketball games, Hiking mountain trails with a GoPro, Collecting finisher medals from charity races, Listening to pump-up playlists
+        """
+        bots.append(third_bot)
+    
+        # if not db.query(Bot).first():
+        #     db.add(new_bot)
+        #     db.add(second_bot)
+        #     db.commit
+        #     print(f"✅ Created bot with id={new_bot.id!r}")
+
+        db_bots = db.query(Bot).all()
+        db_bot_ids = [b.id for b in db_bots]
+        for b in bots: 
+            if b.id not in db_bot_ids: 
+                db.add(b)
+                db.commit
+                print(f"Creating bot with id={b.id!r}")
 
         if not db.query(User).first():
             db.add(new_user)
