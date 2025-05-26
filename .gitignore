@@ -1,4 +1,5 @@
 .env
+.vscode/
 argos_data/
 venv/
 venv-3.11/

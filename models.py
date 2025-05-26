@@ -56,6 +56,7 @@ class Message(Base):
     sender: Mapped[Sender] = mapped_column(String(30), default=Sender.USER, nullable=False)
     content: Mapped[str] = mapped_column(Text)
     pinyin: Mapped[list[any]] = mapped_column(JSON)
+    translation: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now(datetime.timezone.utc))
 
 class Translation(Base): 

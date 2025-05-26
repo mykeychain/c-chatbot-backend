@@ -17,13 +17,14 @@ def create_conversation(db, user_id: str, bot_id: str):
     db.refresh(conv)
     return conv
 
-def create_message(db, conversation_id: str, sender: str, content: str, pinyin: list[str]):
+def create_message(db, conversation_id: str, sender: str, content: str, pinyin: list[str], translation: str = ''):
     msg = Message(
         id=str(uuid.uuid4()),
         conversation_id=conversation_id,
         sender=sender,
         content=content,
         pinyin=pinyin,
+        translation=translation,
         created_at=datetime.datetime.utcnow()
     )
     db.add(msg)

@@ -20,12 +20,14 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     content: str
     pinyin: List[str]
+    translation: Optional[str] = None
 
 class MessageSchema(BaseModel):
     id: str
     sender: str
     content: str
     pinyin: List[str]
+    translation: Optional[str] = None
     created_at: datetime.datetime
 
     class Config:

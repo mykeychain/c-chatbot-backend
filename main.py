@@ -63,13 +63,14 @@ def api_create_conversation(request: ConversationCreateRequest, db: Session = De
             pinyin=get_pinyin_list(request.initial_message)
         )
 
-        ai_content = get_ai_response([], conv.bot, request.initial_message)
+        ai_content, ai_pinyin, ai_translation = get_ai_response([], conv.bot, conv.user, request.initial_message, db)
         create_message(
             db=db,
             conversation_id=conv.id,
             sender='ai',
             content=ai_content,
-            pinyin=get_pinyin_list(ai_content)
+            pinyin=ai_pinyin,
+            translation=ai_translation
         )
 
     return conv
@@ -117,17 +118,25 @@ def api_send_message(request: MessageRequest, db: Session = Depends(get_db)):
         pinyin=get_pinyin_list(request.content)
     )
 
-    ai_content = get_ai_response(recent_msgs, conv.bot, conv.user, request.content)
+    ai_content, ai_pinyin, ai_translation = get_ai_response(recent_msgs, conv.bot, conv.user, request.content, db)
 
     ai_msg = create_message(
         db=db,
         conversation_id=conv.id,
         sender='ai',
         content=ai_content,
-        pinyin=get_pinyin_list(ai_content)
+        pinyin=ai_pinyin,
+        translation=ai_translation
     )
 
-    return MessageSchema(id=ai_msg.id, sender=ai_msg.sender, content=ai_msg.content, pinyin=ai_msg.pinyin, created_at=ai_msg.created_at)
+    return MessageSchema(
+        id=ai_msg.id, 
+        sender=ai_msg.sender, 
+        content=ai_msg.content, 
+        pinyin=ai_msg.pinyin, 
+        translation=ai_msg.translation,
+        created_at=ai_msg.created_at
+    )
 
 @app.get("/api/users/{user_id}/available-bots", response_model=List[BotSchema])
 def api_get_available_bots(user_id: str, db: Session = Depends(get_db)):
