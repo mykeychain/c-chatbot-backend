@@ -23,9 +23,12 @@ from crud import (
     list_user_conversations,
     get_conversation_messages,
     get_available_bots,
+    get_translation,
+    create_translation,
 )
 from dependencies import get_db
-from helpers.translator import ensure_zh_en_installed
+from helpers.text_processing import remove_emojis
+from helpers.translator import ensure_zh_en_installed, translate_chinese_to_english
 from helpers.ai import get_ai_response
 from helpers.pinyin import get_pinyin_list
 from sqlalchemy.orm import Session
@@ -131,12 +134,21 @@ def api_get_available_bots(user_id: str, db: Session = Depends(get_db)):
     return get_available_bots(db, user_id)
 
 @app.post("/api/translate", response_model=TranslationResponse)
-def api_translate_chinese_to_english(request: TranslationRequest):
+def api_translate_chinese_to_english(request: TranslationRequest, db: Session = Depends(get_db)):
     if not request.is_chinese:
         raise HTTPException(status_code=400, detail="Text must contain Chinese characters")
     
-    from helpers.translator import translate_chinese_to_english
-    translated = translate_chinese_to_english(request.text)
+    formatted_text = remove_emojis(request.text)
+
+    translation = get_translation(db, formatted_text)
+    if translation:
+        return TranslationResponse(
+            original_text=request.text,
+            translated_text=translation.value
+        )
+    
+    translated = translate_chinese_to_english(formatted_text)
+    create_translation(db, formatted_text, translated)
     
     return TranslationResponse(
         original_text=request.text,

@@ -57,3 +57,8 @@ class Message(Base):
     content: Mapped[str] = mapped_column(Text)
     pinyin: Mapped[list[any]] = mapped_column(JSON)
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now(datetime.timezone.utc))
+
+class Translation(Base): 
+    __tablename__ = 'translations'
+    key: Mapped[str] = mapped_column(primary_key=True)
+    value: Mapped[str] = mapped_column(Text)

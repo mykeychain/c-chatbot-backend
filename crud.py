@@ -1,8 +1,9 @@
-from models import Conversation, Message, Bot
+from models import Conversation, Message, Bot, Translation
 import uuid
 import datetime
 from sqlalchemy import not_
 from sqlalchemy.orm import Session
+from helpers.text_processing import make_digest
 
 def create_conversation(db, user_id: str, bot_id: str):
     conv = Conversation(
@@ -53,3 +54,17 @@ def get_available_bots(db: Session, user_id: str):
     existing_bot_ids = db.query(Conversation.bot_id).filter(Conversation.user_id == user_id).subquery()
     available_bots = db.query(Bot).filter(not_(Bot.id.in_(existing_bot_ids))).all()
     return available_bots
+
+def get_translation(db, key: str): 
+    hash = make_digest(key)
+    print(f"key: {key}, hash: {hash}")
+    return db.query(Translation).filter(Translation.key == hash).first()
+
+def create_translation(db, key: str, value: str): 
+    hash = make_digest(key)
+    print(f"creating translation:key: {key}, hash: {hash}")
+    translation = Translation(key=hash, value=value)
+    db.add(translation)
+    db.commit()
+    db.refresh(translation)
+    return translation
