@@ -1,6 +1,7 @@
 import os
 import dotenv
 from pathlib import Path
+from helpers.text_processing import remove_emojis
 
 dotenv.load_dotenv()
 project_data = Path(os.getenv("XDG_DATA_HOME", "./argos_data"))
@@ -30,4 +31,7 @@ def ensure_zh_en_installed():
         argostranslate.package.install_from_path(zh_en_pkg.download())
 
 def translate_chinese_to_english(text: str) -> str:
-    return argostranslate.translate.translate(text, "zh", "en")
+    clean_text = remove_emojis(text)
+    if not clean_text:
+        return ""
+    return argostranslate.translate.translate(clean_text, "zh", "en")
