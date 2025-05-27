@@ -1,6 +1,8 @@
+.DS_Store
 .env
 .vscode/
 argos_data/
+gcloud_data/
 venv/
 venv-3.11/
 venv-3.13/

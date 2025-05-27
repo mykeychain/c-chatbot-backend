@@ -31,6 +31,23 @@ def ensure_zh_en_installed():
         argostranslate.package.install_from_path(zh_en_pkg.download())
 
 def translate_chinese_to_english(text: str) -> str:
+    res = google_translate(text)
+    if not res: 
+        res = argos_translate(text)
+
+    return res if res else ""
+
+def google_translate(text: str) -> str: 
+    from google.cloud import translate_v2 as translate
+
+    translate_client = translate.Client()
+    if isinstance(text, bytes):
+        text = text.decode("utf-8")
+
+    result = translate_client.translate(text, target_language='en', format_='text')
+    return result["translatedText"]
+
+def argos_translate(text: str) -> str: 
     clean_text = remove_emojis(text)
     if not clean_text:
         return ""
