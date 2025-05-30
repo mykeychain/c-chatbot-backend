@@ -149,7 +149,10 @@ def api_get_available_bots(user_id: str, db: Session = Depends(get_db)):
 @app.post("/api/translate", response_model=TranslationResponse)
 def api_translate_chinese_to_english(request: TranslationRequest, db: Session = Depends(get_db)):
     if not request.is_chinese:
-        raise HTTPException(status_code=400, detail="Text must contain Chinese characters")
+        return TranslationResponse(
+            original_text=request.text,
+            translated_text=request.text
+        )
     
     formatted_text = remove_emojis(request.text)
 
