@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from schemas import (
     ConversationCreateRequest,
     ConversationCreateResponse,
@@ -41,6 +42,9 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+images_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "./images"))
+app.mount("/images", StaticFiles(directory=images_path), name="images")
 
 app.add_middleware(
   CORSMiddleware,

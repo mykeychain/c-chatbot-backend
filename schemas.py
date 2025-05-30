@@ -36,6 +36,7 @@ class MessageSchema(BaseModel):
 class Bot(BaseModel): 
     id: str
     name: str
+    picture_url: Optional[str] = None
 
 class ConversationSchema(BaseModel):
     id: str
